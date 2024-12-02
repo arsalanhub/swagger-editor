@@ -2,14 +2,12 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Swagger Editor</title>
+  <title>Swagger API Documentation</title>
   <style>
-    /* Adjust styling for better appearance */
+    /* Adjust styles for better appearance */
     * { box-sizing: border-box; }
-    body { font-family: Roboto,sans-serif; font-size: 9px; line-height: 1.42857143; color: #444; margin: 0px; }
-    #swagger-editor { font-size: 1.3em; }
-    .container { height: 100%; max-width: 880px; margin-left: auto; margin-right: auto; }
-    #editor-wrapper { height: 100%; border:1em solid #000; border:none; }
+    body { font-family: Roboto, sans-serif; font-size: 16px; line-height: 1.42857143; color: #444; margin: 0; padding: 0; }
+    #swagger-doc { width: 100%; height: 100vh; }
   </style>
   <link href="./dist/swagger-editor.css" rel="stylesheet">
   <link rel="icon" type="image/png" href="./dist/favicon-32x32.png" sizes="32x32" />
@@ -17,24 +15,27 @@
 </head>
 
 <body>
-  <div id="swagger-editor"></div>
-  <script src="./dist/swagger-editor-bundle.js"> </script>
-  <script src="./dist/swagger-editor-standalone-preset.js"> </script>
+  <!-- The container for the Swagger UI -->
+  <div id="swagger-doc"></div>
+
+  <script src="./dist/swagger-editor-bundle.js"></script>
+  <script src="./dist/swagger-editor-standalone-preset.js"></script>
   <script>
     window.onload = function() {
-      // Initialize Swagger Editor with read-only mode
+      // Initialize Swagger Editor with read-only mode, no layout, and hidden editor panel
       const editor = SwaggerEditorBundle({
-        dom_id: '#swagger-editor',
-        layout: 'StandaloneLayout',
+        dom_id: '#swagger-doc',  // Display Swagger UI in this div instead of editor
+        layout: 'StandaloneLayout',  // Full page layout for the Swagger UI
         presets: [SwaggerEditorStandalonePreset],
-        queryConfigEnabled: false, // Optional: Disable URL query config
-        readOnly: true,  // This makes the editor read-only
-        showCommonExtensions: true, // Optional: show common extensions if needed
-        // Optionally set a file URL if it's hosted somewhere else
-        url: 'https://raw.githubusercontent.com/arsalanhub/swagger-editor/refs/heads/master/openapi.yaml', // Replace with your actual YAML URL
+        queryConfigEnabled: false,  // Disable query config URL
+        readOnly: true,  // Make the editor read-only
+        showCommonExtensions: false,  // Optional: Disable common extensions
+        // Optionally provide the URL of the YAML file
+        url: 'https://your-raw-url-to-swagger-yml-file.yaml',  // Replace with your actual YAML URL
       });
 
-      window.editor = editor;
+      // Hide the editor completely
+      document.querySelector('.swagger-editor').style.display = 'none'; // Hides the editor
     }
   </script>
 </body>
