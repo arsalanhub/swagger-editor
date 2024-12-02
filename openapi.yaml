@@ -1,0 +1,239 @@
+openapi: 3.0.0
+info:
+  title: FileStream API
+  description: APIs for uploading files with metadata and retrieving download pre-signed URLs.
+  version: 1.0.0
+tags:
+  - name: FileController
+    description: Controller for file operations, including uploading and downloading files.
+paths:
+  /upload:
+    post:
+      tags:
+        - FileController
+      summary: Upload files and generate pre-signed URLs.
+      description: Accepts metadata and a list of files, validates quota limits, inserts metadata into DynamoDB, creates an S3 folder, and returns pre-signed URLs for file uploads.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - quotaLimit
+                - AppName
+                - Module
+                - AgencyType
+                - GlobalProviderId
+              properties:
+                quotaLimit:
+                  type: number
+                  description: Maximum quota limit for file uploads.
+                  example: 500.0
+                AppName:
+                  type: string
+                  description: Name of the application.
+                  example: "CG-ANDROID"
+                Module:
+                  type: string
+                  description: Module name under the application.
+                  example: "HHACG"
+                ModuleId:
+                  type: integer
+                  description: Identifier for the module.
+                  example: 0
+                AgencyType:
+                  type: string
+                  description: Type of the agency.
+                  example: "Vendor"
+                AgencyId:
+                  type: integer
+                  description: Identifier for the agency.
+                  example: 686
+                GlobalProviderId:
+                  type: string
+                  description: Global provider identifier.
+                  example: "b6c934da-f64d-4043-86b4-ca533f38ef31"
+                LegacyBasePath:
+                  type: string
+                  description: Base path for legacy files.
+                  example: "\\\\hhafs.hhaexchange.local\\mssqlserver\\HhaFS\\"
+                FileObject:
+                  type: array
+                  description: List of files to be uploaded.
+                  items:
+                    type: object
+                    properties:
+                      fileName:
+                        type: string
+                        description: Name of the file.
+                        example: "document.pdf"
+                      fileSize:
+                        type: number
+                        description: Size of the file in bytes.
+                        example: 1048576
+      responses:
+        "200":
+          description: Partial or full success in generating pre-signed URLs for uploads.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    description: Status message.
+                    example: "Partial success in generating upload pre-signed URLs."
+                  successfulUploads:
+                    type: array
+                    description: List of files with successfully generated pre-signed URLs.
+                    items:
+                      type: object
+                      properties:
+                        fileName:
+                          type: string
+                          description: Name of the uploaded file.
+                          example: "file1.pdf"
+                        fileGuid:
+                          type: string
+                          description: Guid of the uploaded file.
+                          example: "3fff451a-f183-4232-a35c-7f1ea0ff5e1e"
+                        presignedUrl:
+                          type: string
+                          description: Pre-signed URL for uploading the file.
+                          example: "https://s3.amazonaws.com/bucket-name/file1-key?AWSAccessKeyId=..."
+                  failedUploads:
+                    type: array
+                    description: List of files that failed to generate pre-signed URLs.
+                    items:
+                      type: object
+                      properties:
+                        fileName:
+                          type: string
+                          description: Name of the file that failed.
+                          example: "file6.pdf"
+                        errorMessage:
+                          type: string
+                          description: Reason for failure.
+                          example: "Quota exceeded."
+        "400":
+          description: Complete failure in generating pre-signed URLs for uploads.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    description: Error message.
+                    example: "Upload failed due to validation errors."
+                  errors:
+                    type: array
+                    description: List of validation or quota errors.
+                    items:
+                      type: object
+                      properties:
+                        fileName:
+                          type: string
+                          description: Name of the file that failed.
+                          example: "file6.pdf"
+                        errorMessage:
+                          type: string
+                          description: Reason for failure.
+                          example: "Quota exceeded."
+        "500":
+          description: Internal Server Error.
+
+  /download:
+    post:
+      tags:
+        - FileController
+      summary: Retrieve download pre-signed URLs for files.
+      description: Accepts an array of file GUIDs and returns pre-signed URLs for downloading the files.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: array
+              items:
+                type: object
+                required:
+                  - FileGuid
+                  - AppName
+                properties:
+                  FileGuid:
+                    type: string
+                    description: Unique identifier for the file.
+                    example: "3fff451a-f183-4232-a35c-7f1ea0ff5e1e"
+                  AppName:
+                    type: string
+                    description: Name of the application.
+                    example: "CG-ANDROID"
+      responses:
+        '200':
+          description: Partial or full success in generating pre-signed URLs for downloads.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    description: Status message.
+                    example: "Partial success in generating download pre-signed URLs."
+                  successfulDownloads:
+                    type: array
+                    description: List of files with successfully generated pre-signed URLs.
+                    items:
+                      type: object
+                      properties:
+                        fileGuid:
+                          type: string
+                          description: Unique identifier for the file.
+                          example: "3fff451a-f183-4232-a35c-7f1ea0ff5e1e"
+                        presignedUrl:
+                          type: string
+                          description: Pre-signed URL for downloading the file.
+                          example: "https://s3.amazonaws.com/bucket-name/file-key?AWSAccessKeyId=..."
+                  failedDownloads:
+                    type: array
+                    description: List of files that failed to generate pre-signed URLs.
+                    items:
+                      type: object
+                      properties:
+                        fileGuid:
+                          type: string
+                          description: Unique identifier for the file that failed.
+                          example: "3fff451a-f183-4232-a35c-7f1ea0ff5e1e"
+                        errorMessage:
+                          type: string
+                          description: Reason for failure.
+                          example: "File not found in the specified bucket."
+        '400':
+          description: Complete failure in generating pre-signed URLs for downloads.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    description: Error message.
+                    example: "Download request failed due to validation errors."
+                  errors:
+                    type: array
+                    description: List of validation or file errors.
+                    items:
+                      type: object
+                      properties:
+                        fileGuid:
+                          type: string
+                          description: Unique identifier for the file that failed.
+                          example: "3fff451a-f183-4232-a35c-7f1ea0ff5e1e"
+                        errorMessage:
+                          type: string
+                          description: Reason for failure.
+                          example: "File not found."
+        "500":
+          description: Internal Server Error.
