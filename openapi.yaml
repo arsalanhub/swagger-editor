@@ -68,6 +68,14 @@ paths:
                         type: string
                         description: Name of the file.
                         example: "document.pdf"
+                      feature:
+                        type: string
+                        description: Name of the feature.
+                        example: "CaregiverSignature"
+                      featureId:
+                        type: number
+                        description: Feature Id
+                        example: 1048576
                       fileSize:
                         type: number
                         description: Size of the file in bytes.
